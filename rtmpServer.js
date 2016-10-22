@@ -5,7 +5,7 @@
  *
  */
 
-var net = require('net');
+/*var net = require('net');
 var Log = require('./log.js');
 var rtmpSession = require('./rtmpSession.js');
 var debug = 0;
@@ -25,4 +25,4 @@ module.exports = function() {
         });
     };
     return ret;
-};
+};*/

@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/delian/node-rtmpapi",
   "dependencies": {
+    "buffer": "^5.0.0",
     "node-amfutils": "0.0.1"
   }
 }

@@ -2,10 +2,12 @@
  * Created by delian on 3/11/14.
  * This file implements a queue for read certain amount of bytes from the input stream
  */
+ 'use strict';
 
 var Log = require('./log.js');
 var debug = 0;
 var queueLength = 10000000;
+const Buffer = require('buffer').Buffer;
 
 /**
  * Read Queue implementation
@@ -36,12 +38,21 @@ function QueueClass(sock) {
     me.log = Log(debug, sock.remoteAddress + ':' + sock.remotePort).log;
     me.log('QUEUE: Open Read Queue');
 
-    sock.on('data',function(data) {
+    sock.onmessage = function(e) {
         var freespace = 0;
 
         function writeBuf() {
-            data.copy(me.buffer,me.writeIndex);
-            me.writeIndex+=data.length;
+            me.log('QUEUE: writting blob to buf. blob size=' + e.data.lenth);
+            var blobReader = new FileReader();
+            blobReader.onload = function() 
+            {
+                for(var i=0;i<this.result.length; i++)
+                    me.buffer.writeUInt8(this.result[i], me.writeIndex + i);
+            };
+            blobReader.readAsArrayBuffer(e.data);
+            //e.data.copy(me.buffer,me.writeIndex);
+
+            me.writeIndex+=e.data.size;
             me.bufferEnd=Math.max(me.writeIndex,me.bufferEnd);
             me.log('QUEUE: Readable event has been received');
             if (me.readQueue.length==0) {
@@ -56,7 +67,7 @@ function QueueClass(sock) {
         if (me.writeIndex<me.readIndex) freespace=me.readIndex-me.writeIndex;
         else freespace=me.buffer.length-me.writeIndex;
 
-        if (freespace>data.length) return writeBuf();
+        if (freespace>e.data.size) return writeBuf();
 
         // In case we have no enough freespace
         if (me.writeIndex>=me.readIndex) {
@@ -65,19 +76,19 @@ function QueueClass(sock) {
         }
 
         freespace = me.readIndex-me.writeIndex;
-        if (freespace>data.length) return writeBuf();
+        if (freespace>e.data.size) return writeBuf();
 
         // No enough data
         throw new Error('No enough data space, slow reading!');
 
-    });
+    };
 
-    sock.on('close', function() {
+    sock.onclose = function() {
         me.log('QUEUE: Socket has been closed, remove the queue tasks!');
         me.readQueue = [];
         me.defaultCb = null;
         me.sock = null;
-    })
+    };
 }
 
 /**

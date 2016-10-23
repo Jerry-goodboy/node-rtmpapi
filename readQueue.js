@@ -38,21 +38,14 @@ function QueueClass(sock) {
     me.log = Log(debug, sock.remoteAddress + ':' + sock.remotePort).log;
     me.log('QUEUE: Open Read Queue');
 
-    sock.onmessage = function(e) {
+    sock.on('data', function(data) {
         var freespace = 0;
 
         function writeBuf() {
-            me.log('QUEUE: writting blob to buf. blob size=' + e.data.lenth);
-            var blobReader = new FileReader();
-            blobReader.onload = function() 
-            {
-                for(var i=0;i<this.result.length; i++)
-                    me.buffer.writeUInt8(this.result[i], me.writeIndex + i);
-            };
-            blobReader.readAsArrayBuffer(e.data);
-            //e.data.copy(me.buffer,me.writeIndex);
+            me.log('QUEUE: writting. size=' + data.length);
+            data.copy(me.buffer,me.writeIndex);
 
-            me.writeIndex+=e.data.size;
+            me.writeIndex+=data.length;
             me.bufferEnd=Math.max(me.writeIndex,me.bufferEnd);
             me.log('QUEUE: Readable event has been received');
             if (me.readQueue.length==0) {
@@ -67,7 +60,7 @@ function QueueClass(sock) {
         if (me.writeIndex<me.readIndex) freespace=me.readIndex-me.writeIndex;
         else freespace=me.buffer.length-me.writeIndex;
 
-        if (freespace>e.data.size) return writeBuf();
+        if (freespace>data.length) return writeBuf();
 
         // In case we have no enough freespace
         if (me.writeIndex>=me.readIndex) {
@@ -76,19 +69,19 @@ function QueueClass(sock) {
         }
 
         freespace = me.readIndex-me.writeIndex;
-        if (freespace>e.data.size) return writeBuf();
+        if (freespace>data.lenth) return writeBuf();
 
         // No enough data
         throw new Error('No enough data space, slow reading!');
 
-    };
+    });
 
-    sock.onclose = function() {
+    sock.on('close', function() {
         me.log('QUEUE: Socket has been closed, remove the queue tasks!');
         me.readQueue = [];
         me.defaultCb = null;
         me.sock = null;
-    };
+    });
 }
 
 /**

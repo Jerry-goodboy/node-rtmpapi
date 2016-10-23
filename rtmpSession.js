@@ -48,14 +48,14 @@ var RtmpStream = function(sock,isClient,cb) {
         me.rtmpSendHandshakeS2();
     }
 
-    this.sock.onclose = function() {
+    this.sock.on('close', function() {
         me.log('RSESS: Destroy the RTMP session');
         delete(me.log);
         delete(me.msg);
         delete(me.getTs);
         delete(me.sock);
         delete(me.Q);
-    };
+    });
 
     if (typeof cb == 'function') cb.call(this,this); // Send the object as an argument
 };
@@ -69,7 +69,7 @@ RtmpStream.prototype.rtmpSendHandshakeC0 = function() {
     this.Q.Q(0,function() {
         var data = new Buffer(1);
         data.writeUInt8(3,0); // RTMP Version
-        me.sock.send(data.buffer);
+        me.sock.send(data);
         me.log('RSESS: Sent C0 Handshake',data);
     });
 };
@@ -93,7 +93,7 @@ RtmpStream.prototype.rtmpSendHandshakeC1 = function() {
         var buffer = new Buffer(1536);
         buffer.writeUInt32BE(me.getTs(),0); // Set the timestamp
         buffer.writeUInt32BE(0,4); // zero
-        me.sock.send(buffer.buffer);
+        me.sock.send(buffer);
         me.log('RSESS: Sent C1 Handshake',buffer);
     });
 };
@@ -142,7 +142,7 @@ RtmpStream.prototype.rtmpSendHandshakeS1 = function() {
         var buffer = new Buffer(1536);
         buffer.writeUInt32BE(me.getTs(),0); // Set the timestamp
         buffer.writeUInt32BE(0,4); // zero
-        me.sock.send(buffer.buffer);
+        me.sock.send(buffer);
         me.log('RSESS: Sent S1 Handshake',buffer);
     });
 };
@@ -157,7 +157,7 @@ RtmpStream.prototype.rtmpSendHandshakeS01 = function() {
         buffer.writeUInt8(3,0);
         buffer.writeUInt32BE(me.getTs(),1); // Set the timestamp
         buffer.writeUInt32BE(0,5); // zero
-        me.sock.send(buffer.buffer);
+        me.sock.send(buffer);
         me.log('RSESS: Sent S0+1 Handshake',buffer);
     });
 };
@@ -183,7 +183,7 @@ RtmpStream.prototype.rtmpSendHandshakeC2 = function() {
         var buffer = new Buffer(1536);
         if (me.S1) me.S1.copy(buffer);
         buffer.writeUInt32BE(me.c1s1ts,4);
-        me.sock.send(buffer.buffer);
+        me.sock.send(buffer);
         me.log('RSESS: Sent C2 Handshake',buffer);
     });
 };
@@ -207,7 +207,7 @@ RtmpStream.prototype.rtmpSendHandshakeS2 = function() {
         var buffer = new Buffer(1536);
         if (me.C1) me.C1.copy(buffer);
         buffer.writeUInt32BE(me.c1s1ts,4);
-        me.sock.send(buffer.buffer);
+        me.sock.send(buffer);
         me.log('RSESS: Sent S2 Handshake',buffer);
     });
 };

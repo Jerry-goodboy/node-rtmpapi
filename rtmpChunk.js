@@ -70,13 +70,13 @@ function RtmpChunkMsgClass(chunk, opt) {
     me.chunk.chunkSize = me.Q.chunkSize;
     me.oldChunk.chunkSize = me.chunk.chunkSize;
     if (me.sock) {
-        me.sock.onclose = function () {
+        me.sock.on('close', function () {
             me.log('CHUNK: MSG class destroyed', me.streamId);
             me.log = null;
             me.Q = null;
             me.sock = null;
             me.chunk = null;
-        };
+        });
     }
 }
 
@@ -532,14 +532,14 @@ function RtmpChunkClass(opt) {
     me.cStreams = {};
 
     if (me.sock) {
-        me.sock.onclose = function () {
+        me.sock.on('close',function () {
             me.log('CHUNK: ChunkClass destroyed!');
             me.opt = null;
             me.sock = null;
             me.Q = null;
             me.log = null;
             me.cStreams = null;
-        };
+        });
     }
 }
 

@@ -6,6 +6,7 @@
 
 var amf = require('node-amfutils');
 var Log = require('./log.js');
+var Buffer = require('buffer').Buffer;
 
 /**
  * Contains rules for chunk processing
@@ -415,10 +416,10 @@ RtmpChunkMsgClass.prototype.rtmpMsg0Send = function (msg, ts) {
     }
     buffer.writeUInt16BE(ts >> 8, 0);
     buffer.writeUInt8(ts & 0xFF, 2); // Write the Timestamp
-    buffer.writeUInt16BE(msg.sendData.length >> 8, 3);
-    buffer.writeUInt8(msg.sendData.length & 0xFF, 5); // Write the message length
+    buffer.writeUInt16BE(msg.data.length >> 8, 3); //todo: test
+    buffer.writeUInt8(msg.data.length & 0xFF, 5); // Write the message length
     buffer.writeUInt8(msg.msgType || c.msgType, 6); // Write the message type
-    buffer.writeUInt32LE(msg.msgStreamId || c.msgStreamId, 7); // Write the message stream id
+    buffer.writeUInt32LE( msg.msgStreamId || c.msgStreamId, 7); // Write the message stream id
     return me.rtmpChunkSend(0, msg.streamId || c.streamId, Buffer.concat([buffer, msg.sendData])); // Send the concatenated header
 };
 
@@ -749,4 +750,6 @@ RtmpChunkClass.prototype.rtmpReadChunkMessagePCM = function (chunk, cb) {
     });
 };
 
-module.exports = RtmpChunkClass;
+module.exports.RtmpChunkClass = RtmpChunkClass;
+module.exports.RtmpChunkMsgClass = RtmpChunkMsgClass;
+

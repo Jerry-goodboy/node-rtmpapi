@@ -11,7 +11,7 @@ module.exports = function(sDebug,sRaddr) {
         log: function() {
             if (debug) {
                 for (var z = [], k = arguments.length-1; k>=0; k--) z[k]=arguments[k];
-                console.log.apply(this,[new Date,raddr,'>'].concat(z));
+                console.log.apply(this,z);//[/*new Date,raddr,*/'>'].concat(z));
             }
         },
         debug: function(sDebug) {

@@ -4,7 +4,7 @@
  * This little module should provide interface that will allow processing of an RTMP message
  */
 
-var chunk = require('./rtmpChunk.js');
+var chunk = require('./rtmpChunk.js').RtmpChunkClass;
 var Log = require('./log.js');
 
 /**

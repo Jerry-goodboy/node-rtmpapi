@@ -182,7 +182,7 @@ RtmpStream.prototype.rtmpSendHandshakeC2 = function() {
     me.Q.Q(0,function() {
         var buffer = new Buffer(1536);
         if (me.S1) me.S1.copy(buffer);
-        buffer.writeUInt32BE(me.c1s1ts,4);
+        //buffer.writeUInt32BE(me.c1s1ts,4);
         me.sock.send(buffer);
         me.log('RSESS: Sent C2 Handshake',buffer);
     });

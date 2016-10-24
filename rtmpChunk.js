@@ -62,7 +62,9 @@ function RtmpChunkMsgClass(chunk, opt) {
     me.Q = opt.Q; // Inherit Q
     if (opt.Q) me.sock = opt.Q.sock;
     if (opt.sock) me.sock = opt.sock; // Inherit socket
-    me.log = Log(opt.debug, (me.sock ? me.sock.remoteAddress : '') + ':' + (me.sock ? me.sock.remotePort : '')).log; // Implement Logging
+    var logImpl = Log(opt.debug, (me.sock ? me.sock.remoteAddress : '') + ':' + (me.sock ? me.sock.remotePort : ''));
+    me.log = logImpl.log; // Implement Logging
+    me.dumpArray = logImpl.dumpArray;
     if (me.Q && typeof me.Q.chunkSize == 'undefined') {
         me.Q.chunkSize = { rcv: 128, snd: 128, rcvWinSize: 4096, sndWinSize: 4096 };
         me.log('CHUNK: The session never had chunkSize before, lets set it');
@@ -491,6 +493,8 @@ RtmpChunkMsgClass.prototype.rtmpMsg3Send = function (msg, ts) {
  */
 RtmpChunkMsgClass.prototype.rtmpChunkSend = function (type, streamId, data) {
     var bhLen = 1;
+    var me = this;
+
     if (streamId > 63 && streamId < 320) bhLen = 2;
     if (streamId > 319) bhLen = 3;
     var bHdr = new Buffer(bhLen);
@@ -508,7 +512,13 @@ RtmpChunkMsgClass.prototype.rtmpChunkSend = function (type, streamId, data) {
         default:
     }
     bHdr.writeUInt8(bHdr.readUInt8(0) | (type << 6), 0);
-    return this.sock.write(Buffer.concat([bHdr, data])); // Send it immediately over the socket
+    var out = Buffer.concat([bHdr, data]);
+    me.log("CHUNK: rtmpChunkSend: ========\n");
+    me.dumpArray(out, 'hex', 12,8);
+    me.log("CHUNK: rtmpChunkSend: ========\n");
+    me.dumpArray(out, 'char', 12,16);
+
+    return this.sock.write(out); // Send it immediately over the socket
 };
 
 /**

@@ -5,7 +5,7 @@
  'use strict';
 
 var Log = require('./log.js');
-var debug = 0;
+var debug = 1;
 var queueLength = 10000000;
 const Buffer = require('buffer').Buffer;
 
@@ -40,9 +40,9 @@ function QueueClass(sock) {
 
     sock.on('data', function(data) {
         var freespace = 0;
-        me.log('QUEUE: data: ' + data.length + " bytes");
+        me.log('QUEUE: data: ' + data);
         function writeBuf() {
-            me.log('QUEUE: writting. size=' + data.length);
+            me.log('QUEUE: writeBuf. size=' + data.length);
             data.copy(me.buffer,me.writeIndex);
 
             me.writeIndex+=data.length;
@@ -69,7 +69,7 @@ function QueueClass(sock) {
         }
 
         freespace = me.readIndex-me.writeIndex;
-        if (freespace>data.lenth) return writeBuf();
+        if (freespace>data.length) return writeBuf();
 
         // No enough data
         throw new Error('No enough data space, slow reading!');

@@ -392,6 +392,14 @@ RtmpChunkMsgClass.prototype.rtmpMsgSend = function (msg) {
 
     // We will avoid sending data trough the read queue in general to avoid event based blocking
 
+	// byte 0: basicHeader => headerSize | headerType;  //
+	// byte 1...headerSize: header => extended header ;
+
+	//header tyeps:
+    /*#define RTMP_PACKET_SIZE_LARGE    0
+     #define RTMP_PACKET_SIZE_MEDIUM   1
+     #define RTMP_PACKET_SIZE_SMALL    2
+     #define RTMP_PACKET_SIZE_MINIMUM  3*/
     msg.sendData = msg.data.slice(0, c.chunkSize.snd); // The lower layer uses different transport variable - sendData instead data
     me.rtmpMsg0Send(msg);
 
@@ -465,7 +473,8 @@ RtmpChunkMsgClass.prototype.rtmpMsg2Send = function (msg, ts) {
     }
     buffer.writeUInt16BE(ts >> 8, 0);
     buffer.writeUInt8(ts & 0xFF, 2); // Write the Timestamp
-    return me.rtmpChunkSend(2, msg.streamId || c.streamId, Buffer.concat([buffer, msg.sendData])); // Send the concatenated header
+	//fixme: type 0 才能匹配结果，但是为什么？
+    return me.rtmpChunkSend(0/* 2 */, msg.streamId || c.streamId, Buffer.concat([buffer, msg.sendData])); // Send the concatenated header
 };
 
 /**

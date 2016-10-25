@@ -365,10 +365,10 @@ RtmpChunkMsgClass.prototype.rcvAmf0EncCmdMsg = function () {
  * @param s
  * @returns {*}
  */
-RtmpChunkMsgClass.prototype.sendAmf0EncCmdMsg = function (s) {
+RtmpChunkMsgClass.prototype.sendAmf0EncCmdMsg = function (s, ts) {
     var data = amf.encodeAmf0Cmd(s); // TODO: Check the CSid and Sid
     this.log('CHUNK: Send encoded AMF0 cmd', s, data);
-    return this.rtmpMsgSend({ msgType: 20, data: data }); // Force the CMD message into CS2, although it is not required by the standard
+    return this.rtmpMsgSend({ msgType: 20, data: data, ts: ts }); // Force the CMD message into CS2, although it is not required by the standard
 };
 
 /**
@@ -392,20 +392,12 @@ RtmpChunkMsgClass.prototype.rtmpMsgSend = function (msg) {
 
     // We will avoid sending data trough the read queue in general to avoid event based blocking
 
-	// byte 0: basicHeader => headerSize | headerType;  //
-	// byte 1...headerSize: header => extended header ;
-
-	//header tyeps:
-    /*#define RTMP_PACKET_SIZE_LARGE    0
-     #define RTMP_PACKET_SIZE_MEDIUM   1
-     #define RTMP_PACKET_SIZE_SMALL    2
-     #define RTMP_PACKET_SIZE_MINIMUM  3*/
     msg.sendData = msg.data.slice(0, c.chunkSize.snd); // The lower layer uses different transport variable - sendData instead data
-    me.rtmpMsg0Send(msg);
+    me.rtmpMsg0Send(msg, msg.ts);
 
     for (var i = c.chunkSize.snd; msg.data.length - i > 0; i += c.chunkSize.snd) {
         msg.sendData = msg.data.slice(i, i + c.chunkSize.snd);
-        me.rtmpMsg2Send(msg);
+        me.rtmpMsg3Send(msg);
     }
 };
 
@@ -417,7 +409,7 @@ RtmpChunkMsgClass.prototype.rtmpMsgSend = function (msg) {
 RtmpChunkMsgClass.prototype.rtmpMsg0Send = function (msg, ts) {
     var me = this;
     var c = me.chunk;
-    if (!ts) ts = me.getTs();
+    if (ts == undefined) ts = me.getTs();
     var eTs = (ts > 0xFFFFFF) ? 4 : 0;
     var buffer = new Buffer(11 + eTs);
     if (eTs) {
@@ -473,8 +465,8 @@ RtmpChunkMsgClass.prototype.rtmpMsg2Send = function (msg, ts) {
     }
     buffer.writeUInt16BE(ts >> 8, 0);
     buffer.writeUInt8(ts & 0xFF, 2); // Write the Timestamp
-	//fixme: type 0 才能匹配结果，但是为什么？
-    return me.rtmpChunkSend(0/* 2 */, msg.streamId || c.streamId, Buffer.concat([buffer, msg.sendData])); // Send the concatenated header
+
+    return me.rtmpChunkSend(2 , msg.streamId || c.streamId, Buffer.concat([buffer, msg.sendData])); // Send the concatenated header
 };
 
 /**
@@ -485,11 +477,15 @@ RtmpChunkMsgClass.prototype.rtmpMsg2Send = function (msg, ts) {
 RtmpChunkMsgClass.prototype.rtmpMsg3Send = function (msg, ts) {
     var me = this;
     var c = me.chunk;
+    return me.rtmpChunkSend(3, msg.streamId || c.streamId,  msg.sendData);
+    /*var me = this;
+    var c = me.chunk;
     if (!ts) ts = me.getTs();
     var eTs = (ts > 0x7FFFFF) ? 4 : 0;
     var buffer = new Buffer(eTs);
     if (eTs) buffer.writeUInt32BE(ts, 0); // Extended Timestamp at Byte 0
     return me.rtmpChunkSend(3, msg.streamId || c.streamId, Buffer.concat([buffer, msg.sendData])); // Send the concatenated header
+    */
 };
 
 // Send RTMP message
@@ -500,7 +496,7 @@ RtmpChunkMsgClass.prototype.rtmpMsg3Send = function (msg, ts) {
  * @param data chunk data
  * @returns {*}
  */
-RtmpChunkMsgClass.prototype.rtmpChunkSend = function (type, streamId, data) {
+RtmpChunkMsgClass.prototype.rtmpChunkSend = function (type /* fmt */, streamId, data) {
     var bhLen = 1;
     var me = this;
 
@@ -520,6 +516,8 @@ RtmpChunkMsgClass.prototype.rtmpChunkSend = function (type, streamId, data) {
             break;
         default:
     }
+
+    //type (fmt) 占2bit，所以 << 6
     bHdr.writeUInt8(bHdr.readUInt8(0) | (type << 6), 0);
     var out = Buffer.concat([bHdr, data]);
     me.log("CHUNK: rtmpChunkSend: ========\n");

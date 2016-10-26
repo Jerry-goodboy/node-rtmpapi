@@ -40,7 +40,7 @@ function QueueClass(sock) {
 
     sock.on('data', function(data) {
         var freespace = 0;
-        me.log('QUEUE: data: ' + data);
+        me.log('QUEUE: data');
         function writeBuf() {
             me.log('QUEUE: writeBuf. size=' + data.length);
             data.copy(me.buffer,me.writeIndex);

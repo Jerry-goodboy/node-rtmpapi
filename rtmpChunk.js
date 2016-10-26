@@ -4,7 +4,7 @@
  * This little module provides interface to processing chunks on a higher level
  */
 
-var amf = require('node-amfutils');
+var amf = require('./node-amfutils');
 var Log = require('./log.js');
 var Buffer = require('buffer').Buffer;
 

@@ -1,0 +1,3 @@
+[submodule "node-amfutils"]
+	path = node-amfutils
+	url = https://github.com/yingDev/node-amfutils.git

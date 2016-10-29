@@ -289,7 +289,7 @@ RtmpChunkMsgClass.prototype.rcvAudioMsg = function () {
  * Receive Video Message
  */
 RtmpChunkMsgClass.prototype.rcvVideoMsg = function () {
-    this.log('CHUNK: Received Video Message', this.chunk);
+    //this.log('CHUNK: Received Video Message', this.chunk);
     this.chunk.msgTypeText = "video";
     this.chunk.msg = {};
     // TODO: Implement Video Message

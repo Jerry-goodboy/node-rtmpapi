@@ -7,7 +7,7 @@
 var Log = require('./log.js');
 var RQ = require('./readQueue.js');
 var rmsg = require('./rtmpMessage.js');
-var debug = 1;
+var debug = 0;
 
 /**
  * Class constructor
